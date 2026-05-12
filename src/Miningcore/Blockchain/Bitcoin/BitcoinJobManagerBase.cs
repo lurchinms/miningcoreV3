@@ -448,6 +448,7 @@ public abstract class BitcoinJobManagerBase<TJob> : JobManagerBase<TJob>
         };
 
         var responses = await rpc.ExecuteBatchAsync(logger, ct, requests);
+        JValue proofOfWork = null;
 
         if(responses.Any(x => x.Error != null))
         {
@@ -462,6 +463,15 @@ public abstract class BitcoinJobManagerBase<TJob> : JobManagerBase<TJob>
                 throw new PoolStartupException($"Init RPC failed: {string.Join(", ", errors.Select(y => y.Error.Message))}", poolConfig.Id);
         }
 
+        if(responses[2].Response["difficulty"]?["proof-of-work"] != null)
+        {
+            responses[2].Response["difficulty"] = new JValue((double) responses[2].Response["difficulty"]["proof-of-work"]);
+        }
+        if(responses[3].Response["proof-of-work"] != null)
+        {
+            proofOfWork = new JValue((double) responses[3].Response["proof-of-work"]);
+        }
+        
         // extract results
         var validateAddressResponse = responses[0].Error == null ? responses[0].Response.ToObject<ValidateAddressResponse>() : null;
         var submitBlockResponse = responses[1];

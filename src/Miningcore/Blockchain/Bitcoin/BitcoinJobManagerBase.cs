@@ -343,9 +343,16 @@ public abstract class BitcoinJobManagerBase<TJob> : JobManagerBase<TJob>
     {
         try
         {
-            var results = await rpc.ExecuteBatchAsync(logger, ct,
+            var requests = new List<RpcRequest>
+            {
                 new RpcRequest(BitcoinCommands.GetConnectionCount)
-            );
+            };
+
+            var isEmark = poolConfig.Coin.Equals("emark", StringComparison.OrdinalIgnoreCase);
+            if(isEmark)
+                requests.Add(new RpcRequest(BitcoinCommands.GetNetworkHashPS));
+
+            var results = await rpc.ExecuteBatchAsync(logger, ct, requests.ToArray());
 
             if(results.Any(x => x.Error != null))
             {
@@ -359,6 +366,12 @@ public abstract class BitcoinJobManagerBase<TJob> : JobManagerBase<TJob>
 
             //BlockchainStats.NetworkHashrate = miningInfoResponse.NetworkHashps;
             BlockchainStats.ConnectedPeers = (int) (long) connectionCountResponse!;
+
+            if(isEmark && results.Length > 1 && results[1].Error == null)
+            {
+                // DEM's getnetworkhashps returns a value scaled down by 1,000,000 compared to true H/s
+                BlockchainStats.NetworkHashrate = results[1].Response.Value<double>() * 1000000;
+            }
         }
 
         catch(Exception e)
@@ -448,7 +461,7 @@ public abstract class BitcoinJobManagerBase<TJob> : JobManagerBase<TJob>
         };
 
         var responses = await rpc.ExecuteBatchAsync(logger, ct, requests);
-        JValue proofOfWork = null;
+         JValue proofOfWork = null;
 
         if(responses.Any(x => x.Error != null))
         {
@@ -462,22 +475,27 @@ public abstract class BitcoinJobManagerBase<TJob> : JobManagerBase<TJob>
             if(errors.Any())
                 throw new PoolStartupException($"Init RPC failed: {string.Join(", ", errors.Select(y => y.Error.Message))}", poolConfig.Id);
         }
+          
+        var proofOfWorkToken2 = responses[2].Response.SelectToken("difficulty.proof-of-work");
 
-        if(responses[2].Response["difficulty"]?["proof-of-work"] != null)
+        if(proofOfWorkToken2 != null)
         {
             responses[2].Response["difficulty"] = new JValue((double) responses[2].Response["difficulty"]["proof-of-work"]);
         }
-        if(responses[3].Response["proof-of-work"] != null)
+
+        var proofOfWorkToken3 = responses[3].Response.SelectToken("proof-of-work");
+
+        if(proofOfWorkToken3 != null)
         {
             proofOfWork = new JValue((double) responses[3].Response["proof-of-work"]);
         }
-        
+
         // extract results
         var validateAddressResponse = responses[0].Error == null ? responses[0].Response.ToObject<ValidateAddressResponse>() : null;
         var submitBlockResponse = responses[1];
         var blockchainInfoResponse = !hasLegacyDaemon ? responses[2].Response.ToObject<BlockchainInfo>() : null;
         var daemonInfoResponse = hasLegacyDaemon ? responses[2].Response.ToObject<DaemonInfo>() : null;
-        var difficultyResponse = proofOfWork != null ? proofOfWork : responses[3].Response.ToObject<JToken>();
+        var difficultyResponse = responses[3].Response.ToObject<JToken>();
         var addressInfoResponse = responses[4].Error == null ? responses[4].Response.ToObject<AddressInfo>() : null;
 
         // chain detection

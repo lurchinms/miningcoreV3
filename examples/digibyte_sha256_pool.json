@@ -1,68 +1,76 @@
-﻿{
-    "logging": {
-        "level": "info",
-        "enableConsoleLog": true,
-        "enableConsoleColors": true,
-        "logFile": "",
-        "apiLogFile": "",
-        "logBaseDirectory": "",
-        "perPoolLogFile": false
+﻿﻿{
+  "logging": {
+    "level": "info",
+    "enableConsoleLog": true,
+    "enableConsoleColors": true,
+    "logFile": "core.log",
+    "apiLogFile": "api.log",
+    "logBaseDirectory": "/home/kriptokyng/logs",
+    "perPoolLogFile": true
+  },
+  "notifications": {
+    "enabled": true,
+    "email": {
+      "host": "mail.privateemail.com",
+      "port": 465,
+      "user": "support@kriptokyng.com",
+      "password": "Private",
+      "fromAddress": "support@kriptokyng.com",
+      "fromName": "Pool Support"
     },
-    "banning": {
-        "manager": "Integrated",
-        "banOnJunkReceive": true,
-        "banOnInvalidShares": false
-    },
-    "notifications": {
-        "enabled": false,
-        "email": {
-            "host": "smtp.example.com",
-            "port": 587,
-            "user": "user",
-            "password": "password",
-            "fromAddress": "info@yourpool.org",
-            "fromName": "support"
-        },
-        "admin": {
-            "enabled": false,
-            "emailAddress": "user@example.com",
-            "notifyBlockFound": true
+    "admin": {
+      "enabled": true,
+      "emailAddress": "kriptokyng@gmail.com",
+      "notifyBlockFound": false,
+      "notifyPayoutSuccess": false,
+      "notifyPaymentSuccess": false,
+      "notifyPayoutFailure": true
+    }
+  },
+  "persistence": {
+    "postgres": {
+      "host": "127.0.0.1",
+      "port": 5432,
+      "user": "miningcore",
+      "password": "Private",
+      "database": "miningcore"
+    }
+  },
+  "paymentProcessing": {
+    "enabled": true,
+    "interval": 600,
+    "shareRecoveryFile": "recovered-shares.txt"
+  },
+  "api": {
+    "enabled": true,
+    "listenAddress": "*",
+    "port": 4000,
+    "metricsIpWhitelist": [],
+    "rateLimiting": {
+      "disabled": true,
+      "rules": [
+        {
+          "Endpoint": "*",
+          "Period": "1s",
+          "Limit": 5
         }
-    },
-    "persistence": {
-        "postgres": {
-            "host": "127.0.0.1",
-            "port": 5432,
-            "user": "miningcore",
-            "password": "password",
-            "database": "miningcore"
-        }
-    },
-    "paymentProcessing": {
-        "enabled": true,
-        "interval": 600,
-        "shareRecoveryFile": "recovered-shares.txt"
-    },
-    "api": {
-        "enabled": true,
-        "listenAddress": "*",
-        "port": 4000,
-        "metricsIpWhitelist": [],
-        "rateLimiting": {
-            "disabled": true,
-            "rules": [
-                {
-                    "Endpoint": "*",
-                    "Period": "1s",
-                    "Limit": 5
-                }
-            ],
-            "ipWhitelist": [
-                ""
-            ]
-        }
-    },
-    "pools": [{
+      ],
+      "ipWhitelist": []
+    }
+  },
+  "statistics": {
+    "updateInterval": 60,
+    "hashrateCalculationWindow": 30,
+    "gcInterval": 1,
+    "cleanupDays": 1
+  },
+  "coinMarketCapApi": {
+    "key": "Private",
+    "enabled": false
+  },
+  "clusterName": "KriptoKyng.com",
+  "pools": [
+    {
       "id": "dgb-sha256-1",
       "enabled": true,
       "coin": "digibyte-sha256",

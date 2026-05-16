@@ -211,7 +211,7 @@ public class CryptonoteJob
             Span<byte> blockHash = stackalloc byte[32];
             
             // Not all Cryptonote coins are equal
-            if(blobType == ZephyrConstants.BlobType)
+            if(blobType == ZephyrConstants.BlobType || blobType == ScalaConstants.ScalaBlobType)
                 CryptonoteBindings.GetBlockId(blob, blockHash, blobType);
             else
                 ComputeBlockHash(blobConverted, blockHash);
